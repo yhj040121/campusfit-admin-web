@@ -29,7 +29,7 @@ http.interceptors.response.use(
     if (payload && payload.code === 0) {
       return payload.data;
     }
-    return Promise.reject(new Error(payload?.message || "API returned an unexpected result"));
+    return Promise.reject(new Error(payload?.message || "接口返回了异常结果"));
   },
   (error) => {
     if (error?.response?.status === 401) {
@@ -37,9 +37,9 @@ http.interceptors.response.use(
       if (typeof window !== "undefined" && window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
-      return Promise.reject(new Error("Session expired, please login again"));
+      return Promise.reject(new Error("登录状态已过期，请重新登录"));
     }
-    return Promise.reject(new Error(error?.response?.data?.message || error?.message || "Network request failed"));
+    return Promise.reject(new Error(error?.response?.data?.message || error?.message || "网络请求失败"));
   }
 );
 

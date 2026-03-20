@@ -5,6 +5,7 @@ import UserManageView from "../views/UserManageView.vue";
 import ContentAuditView from "../views/ContentAuditView.vue";
 import MerchantManageView from "../views/MerchantManageView.vue";
 import SettlementView from "../views/SettlementView.vue";
+import ActivityManageView from "../views/ActivityManageView.vue";
 import LoginView from "../views/LoginView.vue";
 import { getAdminProfile, getAdminToken, hasAnyRole } from "../utils/adminAuth";
 
@@ -24,18 +25,19 @@ const routes = [
   {
     path: "/login",
     component: LoginView,
-    meta: { public: true, title: "Admin Login" }
+    meta: { public: true, title: "后台登录" }
   },
   {
     path: "/",
     component: AdminLayout,
     redirect: "/dashboard",
     children: [
-      { path: "dashboard", component: DashboardView, meta: { title: "Dashboard", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR", "FINANCE"] } },
-      { path: "users", component: UserManageView, meta: { title: "Users", roles: ["SUPER_ADMIN"] } },
-      { path: "content-audit", component: ContentAuditView, meta: { title: "Content Audit", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] } },
-      { path: "merchants", component: MerchantManageView, meta: { title: "Merchants", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] } },
-      { path: "settlements", component: SettlementView, meta: { title: "Settlements", roles: ["SUPER_ADMIN", "FINANCE"] } }
+      { path: "dashboard", component: DashboardView, meta: { title: "数据看板", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR", "FINANCE"] } },
+      { path: "users", component: UserManageView, meta: { title: "用户管理", roles: ["SUPER_ADMIN"] } },
+      { path: "content-audit", component: ContentAuditView, meta: { title: "内容审核", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] } },
+      { path: "activities", component: ActivityManageView, meta: { title: "活动管理", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] } },
+      { path: "merchants", component: MerchantManageView, meta: { title: "商家管理", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] } },
+      { path: "settlements", component: SettlementView, meta: { title: "佣金结算", roles: ["SUPER_ADMIN", "FINANCE"] } }
     ]
   }
 ];
@@ -46,7 +48,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  document.title = `${to.meta?.title || "CampusFit Admin"} - CampusFit`;
+  document.title = `${to.meta?.title || "CampusFit 管理后台"} - CampusFit`;
 
   const token = getAdminToken();
   const profile = getAdminProfile();
