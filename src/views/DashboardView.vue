@@ -3,14 +3,14 @@
     <section class="dashboard-hero">
       <article class="hero-surface dashboard-hero-main">
         <div class="hero-kicker-pill">运营总览</div>
-        <h1 class="hero-main-title">校园穿搭平台的审核、导购与收益脉搏</h1>
+        <h1 class="hero-main-title">校园穿搭平台的审核、导购与推广激励脉搏</h1>
         <p class="hero-copy">
-          把内容审核节奏、导购互动强度和结算状态集中放在一个轻盈的运营面板里，方便演示时快速串起整条业务闭环。
+          把内容审核节奏、导购互动强度和结算记录变化集中放在一个轻盈的运营面板里，方便演示时快速串起整条业务闭环。
         </p>
         <div class="hero-badge-list">
           <span>内容审核</span>
           <span>导购转化</span>
-          <span>收益结算</span>
+          <span>结算记录</span>
           <span>活动运营</span>
         </div>
       </article>
@@ -25,7 +25,7 @@
           <ul class="bullet-list">
             <li>待审核内容适合在答辩中展示社区治理能力</li>
             <li>导购互动量能直观体现电商导流价值</li>
-            <li>待结算佣金能支撑盈利模式与创作者激励逻辑</li>
+            <li>待结算推广激励能支撑盈利模式与创作者激励逻辑</li>
           </ul>
         </article>
       </aside>
@@ -48,9 +48,9 @@
         <div class="kpi-copy">穿搭内容带来的商品点击热度</div>
       </article>
       <article class="kpi-card ice">
-        <div class="kpi-label">待结算佣金</div>
+        <div class="kpi-label">待结算推广激励</div>
         <div class="kpi-value">￥{{ summary.estimatedCommission }}</div>
-        <div class="kpi-copy">平台侧仍待财务确认的收益</div>
+        <div class="kpi-copy">平台侧仍待财务确认的激励金额</div>
       </article>
     </section>
 
@@ -87,12 +87,12 @@
       <div class="dashboard-side-column">
         <article class="timeline-shell section-card">
           <div class="table-toolbar">
-            <div>
-              <div class="table-title">近期结算动态</div>
-              <div class="table-subtitle">快速查看最近的收益类型与结算状态。</div>
-            </div>
-            <el-tag type="success">财务视角</el-tag>
+          <div>
+            <div class="table-title">近期结算记录</div>
+            <div class="table-subtitle">快速查看最近的推广激励类型与结算状态。</div>
           </div>
+          <el-tag type="success">财务视角</el-tag>
+        </div>
           <el-card shadow="never" v-loading="loading" class="manage-card">
             <el-timeline>
               <el-timeline-item v-for="item in settlements" :key="item.recordId" :timestamp="item.createdAt">
@@ -106,7 +106,7 @@
         <article class="insight-card section-card">
           <div class="insight-title">演示提示</div>
           <ul class="bullet-list">
-            <li>先讲看板数字，再进入审核与结算页面，逻辑最顺</li>
+            <li>先讲看板数字，再进入审核与结算记录页面，逻辑最顺</li>
             <li>活动管理页可作为前端运营能力补充模块展示</li>
             <li>移动端的消息、活动、发布链路可以与这里形成呼应</li>
           </ul>

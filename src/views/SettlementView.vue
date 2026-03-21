@@ -2,12 +2,12 @@
   <div class="manage-page">
     <section class="manage-hero">
       <article class="hero-surface">
-        <div class="hero-kicker-pill">佣金结算</div>
-        <h1 class="hero-main-title">导购收益、合作收入与待结算记录跟踪</h1>
-        <p class="hero-copy">把创作者导购收益、合作分成和结算状态集中展示，方便财务与运营在一个面板里确认待结算金额与历史记录。</p>
+        <div class="hero-kicker-pill">结算记录</div>
+        <h1 class="hero-main-title">推广激励与结算记录跟踪</h1>
+        <p class="hero-copy">把创作者推广激励、合作奖励和结算记录集中展示，方便财务与运营在一个面板里确认待结算金额与历史记录。</p>
         <div class="hero-badge-list">
           <span>待结算</span>
-          <span>收益类型</span>
+          <span>推广激励</span>
           <span>财务确认</span>
         </div>
       </article>
@@ -20,9 +20,9 @@
         <article class="info-card">
           <div class="info-card-title">财务提示</div>
           <ul class="bullet-list">
-            <li>优先处理待结算金额高的创作者记录</li>
-            <li>确认结算后应同步回传状态给运营侧</li>
-            <li>收益类型可继续细分导购与品牌合作</li>
+            <li>优先处理待结算金额高的推广激励记录</li>
+            <li>确认结算后，创作者侧会逐步进入可提现余额</li>
+            <li>提现申请可在“提现申请”页面继续审核打款</li>
           </ul>
         </article>
       </div>
@@ -49,17 +49,20 @@
     <section class="table-shell">
       <div class="table-toolbar">
         <div>
-          <div class="table-title">结算列表</div>
-          <div class="table-subtitle">确认结算后会立即刷新记录状态。</div>
+          <div class="table-title">结算记录列表</div>
+          <div class="table-subtitle">确认结算后会立即刷新结算记录状态，并为创作者端后续提现申请提供基础。</div>
         </div>
-        <el-tag type="warning">财务角色可执行确认结算</el-tag>
+        <div class="toolbar-actions">
+          <el-tag type="warning">财务角色可执行确认结算</el-tag>
+          <el-button plain @click="goWithdrawPage">查看提现申请</el-button>
+        </div>
       </div>
 
       <el-card shadow="never" v-loading="loading" class="manage-card">
         <el-table :data="settlements" stripe>
           <el-table-column prop="recordId" label="记录 ID" width="100" />
           <el-table-column prop="creator" label="创作者" width="120" />
-          <el-table-column prop="type" label="收益类型" min-width="160" />
+          <el-table-column prop="type" label="激励类型" min-width="160" />
           <el-table-column prop="amount" label="金额" width="120">
             <template #default="{ row }">￥{{ row.amount }}</template>
           </el-table-column>
@@ -92,9 +95,11 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { useRouter } from "vue-router";
 import { confirmAdminSettlement, getAdminSettlements } from "../api/admin";
 import { API_BASE_URL } from "../api/http";
 
+const router = useRouter();
 const loading = ref(false);
 const settlements = ref([]);
 const statusText = ref("正在同步结算记录...");
@@ -117,16 +122,20 @@ function statusType(statusCode) {
   return statusCode === 1 ? "success" : "warning";
 }
 
+function goWithdrawPage() {
+  router.push("/withdraw-requests");
+}
+
 async function handleSettle(row) {
   try {
-    await ElMessageBox.confirm(`确认结算创作者“${row.creator}”的这笔佣金吗？`, "结算确认", {
+    await ElMessageBox.confirm(`确认将创作者“${row.creator}”的推广激励记录更新为已结算吗？`, "结算确认", {
       type: "warning",
       confirmButtonText: "确认结算",
       cancelButtonText: "取消"
     });
     actionKey.value = `settle-${row.recordId}`;
     await confirmAdminSettlement(row.recordId);
-    ElMessage.success(`已完成“${row.creator}”的佣金结算`);
+    ElMessage.success(`已将“${row.creator}”的结算记录更新为已结算`);
     await loadSettlements();
   } catch (error) {
     if (error !== "cancel" && error !== "close") {
@@ -139,3 +148,12 @@ async function handleSettle(row) {
 
 onMounted(loadSettlements);
 </script>
+
+<style scoped>
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+</style>

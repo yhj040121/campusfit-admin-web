@@ -51,3 +51,15 @@ export function getAdminSettlements() {
 export function confirmAdminSettlement(recordId) {
   return http.post(`/api/admin/settlements/${recordId}/confirm`);
 }
+
+export function getAdminWithdrawRequests() {
+  return http.get("/api/admin/withdraw-requests");
+}
+
+export function approveAdminWithdrawRequest(requestId) {
+  return http.post(`/api/admin/withdraw-requests/${requestId}/approve`);
+}
+
+export function rejectAdminWithdrawRequest(requestId) {
+  return http.post(`/api/admin/withdraw-requests/${requestId}/reject`);
+}

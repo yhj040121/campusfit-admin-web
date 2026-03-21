@@ -17,7 +17,8 @@ const menus = [
   { path: "/content-audit", label: "内容审核", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] },
   { path: "/activities", label: "活动管理", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] },
   { path: "/merchants", label: "商家管理", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] },
-  { path: "/settlements", label: "佣金结算", roles: ["SUPER_ADMIN", "FINANCE"] }
+  { path: "/settlements", label: "结算记录", roles: ["SUPER_ADMIN", "FINANCE"] },
+  { path: "/withdraw-requests", label: "提现申请", roles: ["SUPER_ADMIN", "FINANCE"] }
 ];
 
 const activeMenu = computed(() => route.path);
@@ -80,11 +81,12 @@ onMounted(() => {
       <div class="brand-panel">
         <div class="brand-kicker">Campus Bulletin</div>
         <div class="brand-title">CampusFit 管理后台</div>
-        <div class="brand-copy">校园穿搭社交导购平台运营中心，以更轻盈的方式查看审核、商家合作与佣金结算。</div>
+        <div class="brand-copy">校园穿搭内容平台运营中心，以更轻盈的方式查看审核、商家合作、推广激励与结算记录。</div>
         <div class="brand-tags">
           <span>内容审核</span>
           <span>导购转化</span>
-          <span>收益结算</span>
+          <span>结算记录</span>
+          <span>提现申请</span>
         </div>
       </div>
       <el-menu :default-active="activeMenu" class="menu-panel" @select="go">

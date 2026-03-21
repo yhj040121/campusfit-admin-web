@@ -5,6 +5,7 @@ import UserManageView from "../views/UserManageView.vue";
 import ContentAuditView from "../views/ContentAuditView.vue";
 import MerchantManageView from "../views/MerchantManageView.vue";
 import SettlementView from "../views/SettlementView.vue";
+import WithdrawRequestView from "../views/WithdrawRequestView.vue";
 import ActivityManageView from "../views/ActivityManageView.vue";
 import LoginView from "../views/LoginView.vue";
 import { getAdminProfile, getAdminToken, hasAnyRole } from "../utils/adminAuth";
@@ -37,7 +38,8 @@ const routes = [
       { path: "content-audit", component: ContentAuditView, meta: { title: "内容审核", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] } },
       { path: "activities", component: ActivityManageView, meta: { title: "活动管理", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] } },
       { path: "merchants", component: MerchantManageView, meta: { title: "商家管理", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] } },
-      { path: "settlements", component: SettlementView, meta: { title: "佣金结算", roles: ["SUPER_ADMIN", "FINANCE"] } }
+      { path: "settlements", component: SettlementView, meta: { title: "结算记录", roles: ["SUPER_ADMIN", "FINANCE"] } },
+      { path: "withdraw-requests", component: WithdrawRequestView, meta: { title: "提现申请", roles: ["SUPER_ADMIN", "FINANCE"] } }
     ]
   }
 ];
