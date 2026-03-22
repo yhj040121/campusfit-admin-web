@@ -15,6 +15,7 @@ const menus = [
   { path: "/dashboard", label: "数据看板", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR", "FINANCE"] },
   { path: "/users", label: "用户管理", roles: ["SUPER_ADMIN"] },
   { path: "/content-audit", label: "内容审核", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] },
+  { path: "/announcements", label: "官方公告", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] },
   { path: "/activities", label: "活动管理", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] },
   { path: "/merchants", label: "商家管理", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] },
   { path: "/settlements", label: "结算记录", roles: ["SUPER_ADMIN", "FINANCE"] },
@@ -82,6 +83,10 @@ onMounted(() => {
         <div class="brand-kicker">Campus Bulletin</div>
         <div class="brand-title">CampusFit 管理后台</div>
         <div class="brand-copy">校园穿搭内容平台运营中心，以更轻盈的方式查看审核、商家合作、推广激励与结算记录。</div>
+        <div class="brand-meta">
+          <span>Issue 01</span>
+          <span>Lookbook Ops</span>
+        </div>
         <div class="brand-tags">
           <span>内容审核</span>
           <span>导购转化</span>
@@ -90,8 +95,9 @@ onMounted(() => {
         </div>
       </div>
       <el-menu :default-active="activeMenu" class="menu-panel" @select="go">
-        <el-menu-item v-for="item in visibleMenus" :key="item.path" :index="item.path">
-          {{ item.label }}
+        <el-menu-item v-for="(item, index) in visibleMenus" :key="item.path" :index="item.path">
+          <span class="menu-order">{{ String(index + 1).padStart(2, '0') }}</span>
+          <span class="menu-text">{{ item.label }}</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -104,13 +110,18 @@ onMounted(() => {
           <div class="page-subtitle">当前已连接 Spring Boot + MySQL：{{ API_BASE_URL }}</div>
         </div>
         <el-space alignment="center" size="large" class="header-actions">
-          <el-space direction="vertical" size="small" alignment="end">
+          <div class="header-stack">
+            <div class="header-stack-kicker">Connected Stack</div>
+            <div class="header-stack-tags">
+              <el-tag type="success">Spring Boot</el-tag>
+              <el-tag type="primary">MySQL</el-tag>
+              <el-tag type="info">Vue 3 + Element Plus</el-tag>
+            </div>
+          </div>
+          <el-space direction="vertical" size="small" alignment="end" class="header-user-box">
             <div class="admin-user-name">{{ adminProfile?.displayName || "管理员" }}</div>
             <div class="admin-user-role">角色：{{ formatRole(adminProfile?.roleCode) }}</div>
           </el-space>
-          <el-tag type="success">Spring Boot</el-tag>
-          <el-tag type="primary">MySQL</el-tag>
-          <el-tag type="info">Vue 3 + Element Plus</el-tag>
           <el-button :loading="loadingProfile" plain @click="syncProfile(true)">刷新资料</el-button>
           <el-button type="danger" plain @click="handleLogout">退出登录</el-button>
         </el-space>
@@ -146,6 +157,27 @@ onMounted(() => {
   margin-top: 16px;
 }
 
+.brand-meta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.brand-meta span {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .brand-tags span {
   display: inline-flex;
   align-items: center;
@@ -172,6 +204,50 @@ onMounted(() => {
 .header-actions {
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.header-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.header-stack-kicker {
+  color: #6f87a0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.header-stack-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.header-user-box {
+  min-width: 120px;
+}
+
+.menu-order {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  margin-right: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.menu-text {
+  flex: 1;
 }
 
 .admin-user-name {

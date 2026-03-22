@@ -3,6 +3,7 @@ import AdminLayout from "../layouts/AdminLayout.vue";
 import DashboardView from "../views/DashboardView.vue";
 import UserManageView from "../views/UserManageView.vue";
 import ContentAuditView from "../views/ContentAuditView.vue";
+import AnnouncementManageView from "../views/AnnouncementManageView.vue";
 import MerchantManageView from "../views/MerchantManageView.vue";
 import SettlementView from "../views/SettlementView.vue";
 import WithdrawRequestView from "../views/WithdrawRequestView.vue";
@@ -36,6 +37,7 @@ const routes = [
       { path: "dashboard", component: DashboardView, meta: { title: "数据看板", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR", "FINANCE"] } },
       { path: "users", component: UserManageView, meta: { title: "用户管理", roles: ["SUPER_ADMIN"] } },
       { path: "content-audit", component: ContentAuditView, meta: { title: "内容审核", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] } },
+      { path: "announcements", component: AnnouncementManageView, meta: { title: "官方公告", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] } },
       { path: "activities", component: ActivityManageView, meta: { title: "活动管理", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] } },
       { path: "merchants", component: MerchantManageView, meta: { title: "商家管理", roles: ["SUPER_ADMIN", "CONTENT_OPERATOR"] } },
       { path: "settlements", component: SettlementView, meta: { title: "结算记录", roles: ["SUPER_ADMIN", "FINANCE"] } },

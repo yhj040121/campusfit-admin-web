@@ -161,7 +161,7 @@ async function handleSubmit() {
 .campus-login-panel {
   border: 1px solid rgba(255, 255, 255, 0.52);
   border-radius: 34px;
-  box-shadow: 0 28px 60px rgba(73, 122, 156, 0.14);
+  box-shadow: 0 28px 60px rgba(43, 24, 34, 0.14);
 }
 
 .login-poster {
@@ -428,6 +428,71 @@ async function handleSubmit() {
 
 .campus-login-panel :deep(.el-input__inner::placeholder) {
   color: #8ca1b2;
+}
+
+.campus-login-page {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(201, 49, 91, 0.16), transparent 24%),
+    radial-gradient(circle at 82% 12%, rgba(45, 87, 217, 0.14), transparent 22%),
+    linear-gradient(135deg, #fef9f4 0%, #f6eee7 100%);
+}
+
+.login-poster,
+.campus-login-panel {
+  border: 1px solid rgba(43, 24, 34, 0.08);
+  border-radius: 38px;
+  box-shadow: 0 28px 70px rgba(43, 24, 34, 0.14);
+}
+
+.login-poster {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.12), transparent 24%),
+    radial-gradient(circle at 84% 12%, rgba(201, 49, 91, 0.22), transparent 18%),
+    linear-gradient(160deg, #2a1521 0%, #381d2c 52%, #22306a 100%);
+}
+
+.campus-login-panel {
+  background:
+    linear-gradient(135deg, rgba(201, 49, 91, 0.06), transparent 30%),
+    linear-gradient(315deg, rgba(45, 87, 217, 0.06), transparent 36%),
+    rgba(255, 250, 245, 0.92) !important;
+}
+
+.poster-badge,
+.brand-badge,
+.demo-card > span {
+  font-family: var(--admin-font-data);
+  font-size: 11px;
+}
+
+.login-poster h2,
+.campus-login-panel h1,
+.demo-card strong {
+  font-family: var(--admin-font-display);
+  letter-spacing: -0.04em;
+}
+
+.campus-login-panel > p,
+.demo-copy {
+  color: var(--admin-text-soft);
+}
+
+.poster-metrics article,
+.poster-point,
+.demo-card {
+  border: 1px solid rgba(43, 24, 34, 0.08);
+}
+
+.demo-card {
+  background: rgba(255, 251, 247, 0.92);
+}
+
+.demo-card small {
+  color: var(--admin-text-muted);
+}
+
+.demo-card > span {
+  color: var(--admin-secondary);
 }
 
 @media (max-width: 960px) {

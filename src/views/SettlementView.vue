@@ -156,4 +156,8 @@ onMounted(loadSettlements);
   gap: 12px;
   flex-wrap: wrap;
 }
+
+.toolbar-actions :deep(.el-button) {
+  border-radius: 999px;
+}
 </style>

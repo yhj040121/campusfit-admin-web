@@ -185,7 +185,7 @@ onMounted(loadData);
   border-radius: 28px;
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(16px);
-  box-shadow: 0 22px 48px rgba(73, 122, 156, 0.1);
+  box-shadow: 0 22px 48px rgba(43, 24, 34, 0.1);
 }
 
 .dashboard-hero-main::after,
@@ -299,5 +299,88 @@ onMounted(loadData);
   .section-card {
     padding: 20px;
   }
+}
+
+.dashboard-hero-main,
+.section-card,
+.kpi-card {
+  border-color: rgba(43, 24, 34, 0.08);
+  border-radius: 32px;
+  background:
+    linear-gradient(135deg, rgba(201, 49, 91, 0.06), transparent 30%),
+    linear-gradient(315deg, rgba(45, 87, 217, 0.06), transparent 36%),
+    rgba(255, 250, 246, 0.92);
+  box-shadow: 0 24px 56px rgba(43, 24, 34, 0.1);
+}
+
+.dashboard-hero-main::after,
+.section-card::after,
+.kpi-card::after {
+  width: 156px;
+  height: 156px;
+  border-radius: 38px;
+  background: linear-gradient(135deg, rgba(201, 49, 91, 0.12), rgba(45, 87, 217, 0.12));
+}
+
+.hero-main-title,
+.table-title,
+.insight-title,
+.timeline-title {
+  font-family: var(--admin-font-display);
+}
+
+.hero-main-title {
+  font-size: clamp(30px, 3.8vw, 46px);
+  line-height: 1.03;
+}
+
+.hero-kicker-pill {
+  background: rgba(255, 250, 246, 0.92);
+  border: 1px solid rgba(43, 24, 34, 0.08);
+  color: var(--admin-secondary);
+  font-family: var(--admin-font-data);
+}
+
+.hero-badge-list span {
+  background: rgba(255, 250, 246, 0.92);
+  border: 1px solid rgba(43, 24, 34, 0.08);
+  color: var(--admin-text);
+}
+
+.kpi-label {
+  color: var(--admin-text-soft);
+  font-family: var(--admin-font-data);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.kpi-value {
+  color: var(--admin-text);
+  font-family: var(--admin-font-data);
+  font-size: 38px;
+}
+
+.kpi-copy,
+.hero-copy,
+.muted-copy,
+.table-subtitle,
+.timeline-copy {
+  color: var(--admin-text-soft);
+}
+
+.sky {
+  background: linear-gradient(180deg, rgba(255, 250, 246, 0.96), rgba(245, 239, 255, 0.96));
+}
+
+.mint {
+  background: linear-gradient(180deg, rgba(255, 250, 246, 0.96), rgba(238, 244, 255, 0.96));
+}
+
+.warm {
+  background: linear-gradient(180deg, rgba(255, 250, 246, 0.96), rgba(255, 239, 231, 0.96));
+}
+
+.ice {
+  background: linear-gradient(180deg, rgba(255, 250, 246, 0.96), rgba(246, 239, 255, 0.96));
 }
 </style>

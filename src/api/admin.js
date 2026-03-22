@@ -40,6 +40,46 @@ export function rejectAdminPost(postId) {
   return http.post(`/api/admin/content-audit/${postId}/reject`);
 }
 
+export function getAdminAnnouncements() {
+  return http.get("/api/admin/announcements");
+}
+
+export function createAdminAnnouncement(payload) {
+  return http.post("/api/admin/announcements", payload);
+}
+
+export function updateAdminAnnouncement(announcementId, payload) {
+  return http.put(`/api/admin/announcements/${announcementId}`, payload);
+}
+
+export function enableAdminAnnouncement(announcementId) {
+  return http.post(`/api/admin/announcements/${announcementId}/enable`);
+}
+
+export function disableAdminAnnouncement(announcementId) {
+  return http.post(`/api/admin/announcements/${announcementId}/disable`);
+}
+
+export function getAdminActivities() {
+  return http.get("/api/admin/activities");
+}
+
+export function createAdminActivity(payload) {
+  return http.post("/api/admin/activities", payload);
+}
+
+export function updateAdminActivity(activityId, payload) {
+  return http.put(`/api/admin/activities/${activityId}`, payload);
+}
+
+export function startAdminActivity(activityId) {
+  return http.post(`/api/admin/activities/${activityId}/start`);
+}
+
+export function stopAdminActivity(activityId) {
+  return http.post(`/api/admin/activities/${activityId}/stop`);
+}
+
 export function getAdminMerchants() {
   return http.get("/api/admin/merchants");
 }

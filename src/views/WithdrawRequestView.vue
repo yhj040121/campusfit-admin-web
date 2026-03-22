@@ -207,4 +207,9 @@ onMounted(loadRequests);
   gap: 8px;
   flex-wrap: wrap;
 }
+
+.toolbar-actions :deep(.el-button),
+.action-group :deep(.el-button) {
+  border-radius: 999px;
+}
 </style>
