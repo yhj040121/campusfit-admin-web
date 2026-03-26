@@ -1,53 +1,39 @@
-<template>
+﻿<template>
   <div class="manage-page">
     <section class="manage-hero">
       <article class="hero-surface">
         <div class="hero-kicker-pill">活动管理</div>
-        <h1 class="hero-main-title">后台直接创建、编辑、发起和终止活动</h1>
-        <p class="hero-copy">这里维护移动端活动中心和发布页的活动数据。活动发起后会进入前台，终止后会立即从用户可参与列表中隐藏。</p>
+        <h1 class="hero-main-title">维护活动中心、首页推荐和发布页可选活动，让管理端跟上你现在 app 的玩法。</h1>
+        <p class="hero-copy">这里的活动数据会同步到移动端活动中心、推荐位和发布页。状态、可选性和时间字段都按当前后端结构做了兼容，避免新旧文案切换后显示失真。</p>
         <div class="hero-badge-list">
-          <span>活动中心</span>
-          <span>发布页绑定</span>
-          <span>发起 / 终止</span>
+          <span>前台可见 {{ activeCount }}</span>
+          <span>首页推荐 {{ featuredCount }}</span>
+          <span>内容数 {{ totalEntries }}</span>
+          <span>发布可选 {{ publishSelectableCount }}</span>
         </div>
       </article>
-
-      <div class="hero-side-stack">
-        <article class="info-card">
-          <div class="info-card-title">当前同步状态</div>
-          <p class="muted-copy">{{ statusText }}</p>
-        </article>
-        <article class="info-card">
-          <div class="info-card-title">运营建议</div>
-          <ul class="bullet-list">
-            <li>进行中的活动会出现在活动中心和发布页选择器</li>
-            <li>终止活动后，用户不能再继续绑定该活动发文</li>
-            <li>推荐位活动建议同时开启“首页推荐”开关</li>
-          </ul>
-        </article>
-      </div>
     </section>
 
     <section class="info-stat-grid">
       <article class="overview-card overview-sky">
         <div class="overview-label">活动总数</div>
         <div class="overview-value">{{ activities.length }}</div>
-        <div class="overview-copy">后台当前维护的活动条数</div>
+        <div class="overview-copy">后台当前维护的活动条数。</div>
       </article>
       <article class="overview-card overview-mint">
         <div class="overview-label">前台可见</div>
         <div class="overview-value">{{ activeCount }}</div>
-        <div class="overview-copy">仍在前台活动中心露出的活动</div>
+        <div class="overview-copy">仍在活动中心和推荐位露出的活动。</div>
       </article>
       <article class="overview-card overview-warm">
         <div class="overview-label">首页推荐</div>
         <div class="overview-value">{{ featuredCount }}</div>
-        <div class="overview-copy">会进入首页活动推荐位的活动</div>
+        <div class="overview-copy">会进入首页推荐模块的活动数量。</div>
       </article>
       <article class="overview-card overview-ice">
         <div class="overview-label">活动内容数</div>
         <div class="overview-value">{{ totalEntries }}</div>
-        <div class="overview-copy">已审核并关联到活动的内容总量</div>
+        <div class="overview-copy">已关联到活动话题的内容总量。</div>
       </article>
     </section>
 
@@ -55,10 +41,9 @@
       <div class="table-toolbar">
         <div>
           <div class="table-title">活动列表</div>
-          <div class="table-subtitle">活动数据会同步到移动端活动中心、首页推荐位和发布页活动绑定。</div>
+          <div class="table-subtitle">时间、热度、发布页可选活动和推荐位都从这里统一维护，适配当前 app 的活动中心展示逻辑。</div>
         </div>
         <el-space>
-          <el-tag type="info">活动接口：{{ API_BASE_URL }}</el-tag>
           <el-button type="primary" @click="openCreateDialog">新建活动</el-button>
         </el-space>
       </div>
@@ -68,14 +53,19 @@
           <el-table-column prop="title" label="活动标题" min-width="210" />
           <el-table-column prop="scene" label="场景" width="120" />
           <el-table-column prop="period" label="时间文案" width="160" />
-          <el-table-column prop="statusText" label="状态" width="110">
+          <el-table-column prop="statusText" label="状态" width="120">
             <template #default="{ row }">
-              <el-tag :type="row.active ? 'success' : 'info'">{{ row.statusText }}</el-tag>
+              <el-tag :type="resolveActivityStatusType(row)">{{ row.statusText }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="featured" label="推荐" width="90">
+          <el-table-column prop="featured" label="推荐" width="100">
             <template #default="{ row }">
-              <el-tag :type="row.featured ? 'warning' : 'info'">{{ row.featured ? '首页推荐' : '普通' }}</el-tag>
+              <el-tag :type="row.featured ? 'warning' : 'info'">{{ row.featured ? "首页推荐" : "普通" }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="publishSelectable" label="发布可选" width="110">
+            <template #default="{ row }">
+              <el-tag :type="row.publishSelectable ? 'success' : 'info'">{{ row.publishSelectable ? "可选" : "不可选" }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="entries" label="内容数" width="90" />
@@ -130,7 +120,7 @@
           <el-form-item label="活动状态">
             <el-select v-model="form.statusCode" style="width: 100%;">
               <el-option label="进行中" value="ONGOING" />
-              <el-option label="征集中" value="RECRUITING" />
+              <el-option label="招募中" value="RECRUITING" />
             </el-select>
           </el-form-item>
           <el-form-item label="开始时间">
@@ -158,6 +148,9 @@
           </el-form-item>
           <el-form-item label="首页推荐">
             <el-switch v-model="form.featuredFlag" inline-prompt active-text="推荐" inactive-text="普通" />
+          </el-form-item>
+          <el-form-item label="发布页可选">
+            <el-switch v-model="form.publishSelectableFlag" inline-prompt active-text="可选" inactive-text="不可选" />
           </el-form-item>
           <el-form-item label="热度值">
             <el-input-number v-model="form.heatValue" :min="0" :step="10" />
@@ -198,13 +191,12 @@ import {
   stopAdminActivity,
   updateAdminActivity
 } from "../api/admin";
-import { API_BASE_URL } from "../api/http";
+import { normalizeDateTimeValue, resolveActivityStatusType } from "../utils/adminUi";
 
 const loading = ref(false);
 const saving = ref(false);
 const dialogVisible = ref(false);
 const dialogMode = ref("create");
-const statusText = ref("正在同步活动列表...");
 const actionKey = ref("");
 const editingId = ref(null);
 const activities = ref([]);
@@ -225,6 +217,7 @@ const rules = {
 const activeCount = computed(() => activities.value.filter((item) => item.active).length);
 const featuredCount = computed(() => activities.value.filter((item) => item.featured).length);
 const totalEntries = computed(() => activities.value.reduce((sum, item) => sum + Number(item.entries || 0), 0));
+const publishSelectableCount = computed(() => activities.value.filter((item) => item.publishSelectable).length);
 
 function defaultForm() {
   return {
@@ -238,6 +231,7 @@ function defaultForm() {
     sceneLabel: "",
     statusCode: "ONGOING",
     featuredFlag: false,
+    publishSelectableFlag: true,
     heatValue: 0,
     sortOrder: 0,
     status: true,
@@ -264,11 +258,12 @@ function applyRowToForm(row) {
     sceneLabel: row.scene || "",
     statusCode: row.statusCode || "ONGOING",
     featuredFlag: !!row.featured,
+    publishSelectableFlag: row.publishSelectable !== false,
     heatValue: Number(row.heat || 0),
     sortOrder: Number(row.sortOrder || 0),
     status: !!row.active,
-    startTime: row.startTime && row.startTime !== "-" ? row.startTime + ":00" : "",
-    endTime: row.endTime && row.endTime !== "-" ? row.endTime + ":00" : ""
+    startTime: normalizeDateTimeValue(row.startTime),
+    endTime: normalizeDateTimeValue(row.endTime)
   });
 }
 
@@ -284,6 +279,7 @@ function toPayload() {
     sceneLabel: form.sceneLabel.trim(),
     statusCode: form.statusCode || "ONGOING",
     featuredFlag: form.featuredFlag ? 1 : 0,
+    publishSelectableFlag: form.publishSelectableFlag ? 1 : 0,
     heatValue: Number(form.heatValue || 0),
     sortOrder: Number(form.sortOrder || 0),
     status: form.status ? 1 : 0,
@@ -296,9 +292,7 @@ async function loadActivities() {
   loading.value = true;
   try {
     activities.value = await getAdminActivities();
-    statusText.value = `已连接后端：${API_BASE_URL}`;
   } catch (error) {
-    statusText.value = `活动列表请求失败：${error.message}`;
     ElMessage.error(error.message || "加载活动列表失败");
   } finally {
     loading.value = false;
@@ -371,29 +365,3 @@ async function toggleActivity(row, enabled) {
 
 onMounted(loadActivities);
 </script>
-
-<style scoped>
-.dialog-form {
-  margin-top: 8px;
-}
-
-.dialog-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 16px;
-}
-
-.span-2 {
-  grid-column: 1 / -1;
-}
-
-@media (max-width: 920px) {
-  .dialog-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .span-2 {
-    grid-column: auto;
-  }
-}
-</style>

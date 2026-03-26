@@ -52,7 +52,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  document.title = `${to.meta?.title || "CampusFit 管理后台"} - CampusFit`;
+  document.title = `${to.meta?.title || "青搭管理后台"} - 青搭`;
 
   const token = getAdminToken();
   const profile = getAdminProfile();

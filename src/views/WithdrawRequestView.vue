@@ -1,48 +1,38 @@
-<template>
+﻿<template>
   <div class="manage-page">
     <section class="manage-hero">
       <article class="hero-surface">
         <div class="hero-kicker-pill">提现申请</div>
-        <h1 class="hero-main-title">创作者提现申请与打款审核</h1>
-        <p class="hero-copy">把已结算激励后的提现申请集中收进财务工作台，方便统一审核、打款确认和异常驳回，形成完整的激励兑现闭环。</p>
+        <h1 class="hero-main-title">让创作者提现审核、打款确认和消息回写保持在同一条线上。</h1>
+        <p class="hero-copy">提现通过或驳回后会继续影响 app 里的激励中心和消息通知，所以这里的状态展示和金额累计都按当前后端字段做了更稳的适配。</p>
         <div class="hero-badge-list">
-          <span>审核中</span>
-          <span>线下打款</span>
-          <span>消息回执</span>
+          <span>审核中 {{ pendingCount }}</span>
+          <span>待处理金额 {{ pendingAmount }}</span>
+          <span>总申请 {{ requests.length }}</span>
         </div>
       </article>
-
-      <div class="hero-side-stack">
-        <article class="info-card">
-          <div class="info-card-title">当前同步状态</div>
-          <p class="muted-copy">{{ statusText }}</p>
-        </article>
-        <article class="info-card">
-          <div class="info-card-title">审核提醒</div>
-          <ul class="bullet-list">
-            <li>优先处理审核中的申请，避免创作者等待过久</li>
-            <li>通过后会向创作者发送“已打款”消息提醒</li>
-            <li>驳回后会提示创作者核对收款信息再重新申请</li>
-          </ul>
-        </article>
-      </div>
     </section>
 
     <section class="info-stat-grid">
       <article class="overview-card overview-sky">
         <div class="overview-label">申请总数</div>
         <div class="overview-value">{{ requests.length }}</div>
-        <div class="overview-copy">当前已进入后台的提现申请总量</div>
+        <div class="overview-copy">当前进入后台的提现申请总量。</div>
       </article>
       <article class="overview-card overview-warm">
         <div class="overview-label">审核中</div>
         <div class="overview-value">{{ pendingCount }}</div>
-        <div class="overview-copy">仍待财务确认与打款的申请</div>
+        <div class="overview-copy">仍待财务确认与打款的申请。</div>
       </article>
       <article class="overview-card overview-mint">
-        <div class="overview-label">审核中金额</div>
-        <div class="overview-value">￥{{ pendingAmount }}</div>
-        <div class="overview-copy">当前待处理提现申请的累计金额</div>
+        <div class="overview-label">待处理金额</div>
+        <div class="overview-value">{{ pendingAmount }}</div>
+        <div class="overview-copy">当前待处理提现申请的累计金额。</div>
+      </article>
+      <article class="overview-card overview-ice">
+        <div class="overview-label">已处理</div>
+        <div class="overview-value">{{ processedCount }}</div>
+        <div class="overview-copy">已完成打款或驳回的申请数量。</div>
       </article>
     </section>
 
@@ -50,10 +40,9 @@
       <div class="table-toolbar">
         <div>
           <div class="table-title">提现申请列表</div>
-          <div class="table-subtitle">审核通过后会更新为已打款，驳回后会同步消息给创作者。</div>
+          <div class="table-subtitle">审核通过后会更新为已打款，驳回后也会同步给创作者消息入口。</div>
         </div>
         <div class="toolbar-actions">
-          <el-tag type="warning">财务角色可执行打款审核</el-tag>
           <el-button plain @click="goSettlements">查看结算记录</el-button>
         </div>
       </div>
@@ -63,17 +52,17 @@
           <el-table-column prop="requestId" label="申请 ID" width="100" />
           <el-table-column prop="creator" label="创作者" width="120" />
           <el-table-column prop="amount" label="提现金额" width="120">
-            <template #default="{ row }">￥{{ row.amount }}</template>
+            <template #default="{ row }">{{ formatCurrency(row.amount) }}</template>
           </el-table-column>
           <el-table-column prop="status" label="审核状态" width="120">
             <template #default="{ row }">
               <el-tag :type="statusType(row.statusCode)">{{ row.status }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="createdAt" label="申请时间" width="160" />
-          <el-table-column prop="processedAt" label="处理时间" width="160" />
+          <el-table-column prop="createdAt" label="申请时间" width="170" />
+          <el-table-column prop="processedAt" label="处理时间" width="170" />
           <el-table-column prop="remark" label="处理备注" min-width="220" show-overflow-tooltip />
-          <el-table-column label="操作" width="200" fixed="right">
+          <el-table-column label="操作" width="210" fixed="right">
             <template #default="{ row }">
               <div v-if="row.statusCode === 0" class="action-group">
                 <el-button
@@ -113,27 +102,24 @@ import {
   getAdminWithdrawRequests,
   rejectAdminWithdrawRequest
 } from "../api/admin";
-import { API_BASE_URL } from "../api/http";
+import { formatCurrency, toNumber } from "../utils/adminUi";
 
 const router = useRouter();
 const loading = ref(false);
 const requests = ref([]);
-const statusText = ref("正在同步提现申请...");
 const actionKey = ref("");
 
 const pendingCount = computed(() => requests.value.filter((item) => item.statusCode === 0).length);
-const pendingAmount = computed(() => requests.value
+const processedCount = computed(() => requests.value.filter((item) => item.statusCode !== 0).length);
+const pendingAmount = computed(() => formatCurrency(requests.value
   .filter((item) => item.statusCode === 0)
-  .reduce((sum, item) => sum + Number(item.amount || 0), 0)
-  .toFixed(2));
+  .reduce((sum, item) => sum + toNumber(item.amount), 0)));
 
 async function loadRequests() {
   loading.value = true;
   try {
     requests.value = await getAdminWithdrawRequests();
-    statusText.value = `已连接后端：${API_BASE_URL}`;
   } catch (error) {
-    statusText.value = `提现申请请求失败：${error.message}`;
     ElMessage.error(error.message || "加载提现申请失败");
   } finally {
     loading.value = false;
@@ -192,24 +178,3 @@ async function handleReject(row) {
 
 onMounted(loadRequests);
 </script>
-
-<style scoped>
-.toolbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.action-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.toolbar-actions :deep(.el-button),
-.action-group :deep(.el-button) {
-  border-radius: 999px;
-}
-</style>
