@@ -4,9 +4,15 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "npm run dev:server",
+    "dev:local": "vite --mode backend-local",
+    "dev:server": "vite --mode backend-server",
+    "build": "npm run build:server",
+    "build:local": "vite build --mode backend-local",
+    "build:server": "vite build --mode backend-server",
+    "preview": "npm run preview:server",
+    "preview:local": "vite preview --mode backend-local",
+    "preview:server": "vite preview --mode backend-server"
   },
   "dependencies": {
     "axios": "^1.7.2",
