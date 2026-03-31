@@ -52,3 +52,15 @@ export function hasAnyRole(roleCodes) {
   }
   return roleCodes.includes(profile.roleCode);
 }
+
+export function getDefaultAdminPathByRole(profile) {
+  switch (profile?.roleCode) {
+    case "CONTENT_OPERATOR":
+      return "/dashboard";
+    case "FINANCE":
+      return "/settlements";
+    case "SUPER_ADMIN":
+    default:
+      return "/dashboard";
+  }
+}

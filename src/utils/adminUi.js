@@ -32,6 +32,24 @@ export function formatCompactNumber(value) {
   return String(numeric);
 }
 
+export function formatAdminCode(prefix, value, pad = 6) {
+  const numeric = Number(value || 0);
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return `${prefix}-${"0".repeat(Math.max(Number(pad) || 6, 1))}`;
+  }
+  return `${prefix}-${String(Math.trunc(numeric)).padStart(Math.max(Number(pad) || 6, 1), "0")}`;
+}
+
+export function matchesKeyword(keyword, values) {
+  const needle = String(keyword || "").trim().toLowerCase();
+  if (!needle) {
+    return true;
+  }
+
+  const list = Array.isArray(values) ? values : [values];
+  return list.some((value) => String(value ?? "").toLowerCase().includes(needle));
+}
+
 export function normalizeDateTimeValue(value) {
   const text = toSafeText(value);
   if (!text || text === "-") {
@@ -88,6 +106,23 @@ export function resolveMerchantStatusType(value) {
   }
   if (matchesAny(value, ["暂停", "待沟通", "筹备", "pending"])) {
     return "warning";
+  }
+  return "info";
+}
+
+export function resolveCooperationStatusType(row) {
+  const statusCode = toNumber(row?.statusCode);
+  if (statusCode === 3) {
+    return "success";
+  }
+  if (statusCode === 4) {
+    return "danger";
+  }
+  if (statusCode === 2) {
+    return "warning";
+  }
+  if (statusCode === 1) {
+    return "primary";
   }
   return "info";
 }

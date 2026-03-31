@@ -33,7 +33,7 @@ import { reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import { useRoute, useRouter } from "vue-router";
 import { loginAdmin } from "../api/admin";
-import { setAdminSession } from "../utils/adminAuth";
+import { getDefaultAdminPathByRole, setAdminSession } from "../utils/adminAuth";
 
 const route = useRoute();
 const router = useRouter();
@@ -53,15 +53,7 @@ function getRedirectPath(payload) {
   if (route.query.redirect) {
     return String(route.query.redirect);
   }
-  switch (payload?.roleCode) {
-    case "CONTENT_OPERATOR":
-      return "/content-audit";
-    case "FINANCE":
-      return "/settlements";
-    case "SUPER_ADMIN":
-    default:
-      return "/dashboard";
-  }
+  return getDefaultAdminPathByRole(payload);
 }
 
 async function handleSubmit() {

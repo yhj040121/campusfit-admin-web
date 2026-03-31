@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="manage-page">
     <section class="manage-hero">
       <article class="hero-surface">
@@ -43,39 +43,71 @@
           <div class="table-subtitle">确认结算后会直接影响创作者激励中心的可提现余额与后续提现申请。</div>
         </div>
         <div class="toolbar-actions">
+          <el-input
+            v-model="keyword"
+            clearable
+            placeholder="搜索创作者 / 类型 / 记录 ID"
+            class="filter-input"
+          />
+          <el-select v-model="statusFilter" class="filter-select">
+            <el-option label="全部状态" value="all" />
+            <el-option label="待结算" value="pending" />
+            <el-option label="已完成" value="completed" />
+          </el-select>
           <el-button plain @click="goWithdrawPage">查看提现申请</el-button>
         </div>
       </div>
 
-      <el-card shadow="never" v-loading="loading" class="manage-card">
-        <el-table :data="settlements" stripe>
-          <el-table-column prop="recordId" label="记录 ID" width="100" />
-          <el-table-column prop="creator" label="创作者" width="120" />
-          <el-table-column prop="type" label="激励类型" min-width="160" />
-          <el-table-column prop="amount" label="金额" width="120">
-            <template #default="{ row }">{{ formatCurrency(row.amount) }}</template>
-          </el-table-column>
-          <el-table-column prop="status" label="结算状态" width="120">
-            <template #default="{ row }">
-              <el-tag :type="statusType(row.statusCode)">{{ row.status }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="createdAt" label="创建时间" width="170" />
-          <el-table-column label="操作" width="140" fixed="right">
-            <template #default="{ row }">
-              <el-button
-                v-if="row.statusCode === 0"
-                size="small"
-                type="primary"
-                :loading="actionKey === `settle-${row.recordId}`"
-                @click="handleSettle(row)"
-              >
-                确认结算
-              </el-button>
-              <el-tag v-else type="success">已完成</el-tag>
-            </template>
-          </el-table-column>
-        </el-table>
+      <el-card shadow="never" v-loading="loading" class="manage-card ops-list-panel">
+        <div v-if="filteredSettlements.length" class="ops-card-list">
+          <article
+            v-for="row in filteredSettlements"
+            :key="row.recordId"
+            class="ops-card ops-card--split settlement-card"
+          >
+            <div class="ops-card-main">
+              <div class="ops-card-code">{{ formatAdminCode("SET", row.recordId) }}</div>
+              <div class="ops-card-heading">
+                <div class="ops-card-title">{{ row.creator || "未知创作者" }}</div>
+                <span class="ops-pill" :class="`ops-pill--${statusTone(row.statusCode)}`">
+                  {{ row.status || "待结算" }}
+                </span>
+              </div>
+              <div class="ops-card-summary">{{ row.type || "推广激励" }}</div>
+              <div class="ops-meta-row">
+                <span class="ops-meta-block">
+                  <span class="ops-meta-label">创建时间</span>
+                  <span class="ops-meta-value">{{ row.createdAt || "-" }}</span>
+                </span>
+              </div>
+            </div>
+
+            <div class="ops-card-stack">
+              <div class="ops-section-label">结算金额</div>
+              <div class="ops-amount">{{ formatCurrency(row.amount) }}</div>
+              <div class="ops-note">激励类型：{{ row.type || "推广激励" }}</div>
+              <div class="ops-note">当前状态：{{ row.status || "待结算" }}</div>
+            </div>
+
+            <div class="ops-card-side">
+              <div class="ops-card-actions">
+                <el-button
+                  v-if="row.statusCode === 0"
+                  type="primary"
+                  :loading="actionKey === `settle-${row.recordId}`"
+                  @click="handleSettle(row)"
+                >
+                  确认结算
+                </el-button>
+                <span v-else class="ops-pill ops-pill--success">已完成</span>
+              </div>
+              <div class="ops-card-caption">
+                {{ row.statusCode === 0 ? "确认后会回写创作者可提现余额。" : "这笔结算已经完成回写，可继续处理提现。" }}
+              </div>
+            </div>
+          </article>
+        </div>
+        <el-empty v-else description="没有符合筛选条件的结算记录" />
       </el-card>
     </section>
   </div>
@@ -86,18 +118,37 @@ import { computed, onMounted, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter } from "vue-router";
 import { confirmAdminSettlement, getAdminSettlements } from "../api/admin";
-import { formatCurrency, toNumber } from "../utils/adminUi";
+import { formatAdminCode, formatCurrency, matchesKeyword, toNumber } from "../utils/adminUi";
 
 const router = useRouter();
 const loading = ref(false);
 const settlements = ref([]);
 const actionKey = ref("");
+const keyword = ref("");
+const statusFilter = ref("all");
 
 const pendingCount = computed(() => settlements.value.filter((item) => item.statusCode === 0).length);
 const completedCount = computed(() => settlements.value.filter((item) => item.statusCode === 1).length);
 const pendingAmount = computed(() => formatCurrency(settlements.value
   .filter((item) => item.statusCode === 0)
   .reduce((sum, item) => sum + toNumber(item.amount), 0)));
+const filteredSettlements = computed(() => settlements.value.filter((item) => {
+  const matchesText = matchesKeyword(keyword.value, [
+    item.recordId,
+    item.creator,
+    item.type,
+    item.status,
+    item.createdAt
+  ]);
+  const matchesStatus = statusFilter.value === "all"
+    || (statusFilter.value === "pending" && item.statusCode === 0)
+    || (statusFilter.value === "completed" && item.statusCode === 1);
+  return matchesText && matchesStatus;
+}));
+
+function statusTone(statusCode) {
+  return statusCode === 1 ? "success" : "warning";
+}
 
 async function loadSettlements() {
   loading.value = true;
@@ -108,10 +159,6 @@ async function loadSettlements() {
   } finally {
     loading.value = false;
   }
-}
-
-function statusType(statusCode) {
-  return statusCode === 1 ? "success" : "warning";
 }
 
 function goWithdrawPage() {
@@ -140,3 +187,15 @@ async function handleSettle(row) {
 
 onMounted(loadSettlements);
 </script>
+
+<style scoped>
+.settlement-card {
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.95fr) auto;
+}
+
+@media (max-width: 1180px) {
+  .settlement-card {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

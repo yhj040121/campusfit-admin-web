@@ -32,6 +32,10 @@ export function getAdminContentAudit() {
   return http.get("/admin/content-audit");
 }
 
+export function getAdminContentAuditDetail(postId) {
+  return http.get(`/admin/content-audit/${postId}`);
+}
+
 export function approveAdminPost(postId) {
   return http.post(`/admin/content-audit/${postId}/approve`);
 }
@@ -64,12 +68,24 @@ export function getAdminActivities() {
   return http.get("/admin/activities");
 }
 
+export function getAdminCooperations() {
+  return http.get("/admin/cooperations");
+}
+
 export function createAdminActivity(payload) {
   return http.post("/admin/activities", payload);
 }
 
 export function updateAdminActivity(activityId, payload) {
   return http.put(`/admin/activities/${activityId}`, payload);
+}
+
+export function createAdminCooperation(payload) {
+  return http.post("/admin/cooperations", payload);
+}
+
+export function cancelAdminCooperation(cooperationId) {
+  return http.post(`/admin/cooperations/${cooperationId}/cancel`);
 }
 
 export function startAdminActivity(activityId) {
@@ -80,8 +96,24 @@ export function stopAdminActivity(activityId) {
   return http.post(`/admin/activities/${activityId}/stop`);
 }
 
+export function issueAdminCooperationReward(cooperationId) {
+  return http.post(`/admin/cooperations/${cooperationId}/issue-reward`);
+}
+
 export function getAdminMerchants() {
   return http.get("/admin/merchants");
+}
+
+export function createAdminMerchant(payload) {
+  return http.post("/admin/merchants", payload);
+}
+
+export function activateAdminMerchant(merchantId) {
+  return http.post(`/admin/merchants/${merchantId}/activate`);
+}
+
+export function deleteAdminMerchant(merchantId) {
+  return http.post(`/admin/merchants/${merchantId}/delete`);
 }
 
 export function getAdminSettlements() {

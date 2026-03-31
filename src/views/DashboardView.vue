@@ -3,13 +3,13 @@
     <section class="dashboard-hero">
       <article class="hero-surface dashboard-hero-main">
         <div class="hero-kicker-pill">运营总览</div>
-        <h1 class="hero-main-title">把内容审核、活动位和创作者激励放进同一块编辑式看板里。</h1>
+        <h1 class="hero-main-title">把内容审核、合作进度和创作者激励放进同一块编辑式看板里。</h1>
         <p class="hero-copy">
           管理端已经按你 app 当前的 editorial 视觉重新收拢了内容、公告、活动和结算链路，方便运营与财务在同一个入口里快速定位当天重点。
         </p>
         <div class="hero-badge-list">
           <span>待审核 {{ summary.pendingAudits }}</span>
-          <span>活动位 {{ summary.activeCampaigns }}</span>
+          <span>进行中合作 {{ summary.activeCampaigns }}</span>
           <span>点击 {{ formatCompactNumber(summary.productClicks) }}</span>
           <span>激励 {{ formatCurrency(summary.estimatedCommission) }}</span>
         </div>
@@ -48,23 +48,44 @@
           </div>
         </div>
 
-        <el-card shadow="never" v-loading="loading" class="manage-card">
-          <el-table :data="audits" stripe>
-            <el-table-column prop="title" label="内容标题" min-width="220" />
-            <el-table-column prop="author" label="发布者" width="120" />
-            <el-table-column prop="scene" label="场景" width="120" />
-            <el-table-column prop="productStatus" label="商品链路" width="130">
-              <template #default="{ row }">
-                <el-tag :type="resolveProductStatusType(row.productStatus)">{{ row.productStatus }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="auditStatus" label="审核状态" width="120">
-              <template #default="{ row }">
-                <el-tag :type="auditTagType(row.auditStatusCode)">{{ row.auditStatus }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="createdAt" label="提交时间" width="170" />
-          </el-table>
+        <el-card shadow="never" v-loading="loading" class="manage-card ops-list-panel">
+          <div v-if="audits.length" class="ops-card-list">
+            <article
+              v-for="row in audits"
+              :key="row.postId"
+              class="ops-card ops-card--compact dashboard-audit-card"
+            >
+              <div class="ops-card-main">
+                <div class="ops-card-code">{{ formatAdminCode("AUD", row.postId) }}</div>
+                <div class="ops-card-title">{{ row.title || "未命名内容" }}</div>
+                <div class="ops-meta-row">
+                  <span class="ops-meta-block">
+                    <span class="ops-meta-label">发布者</span>
+                    <span class="ops-meta-value">{{ row.author || "-" }}</span>
+                  </span>
+                  <span class="ops-meta-sep" />
+                  <span class="ops-meta-block">
+                    <span class="ops-meta-label">场景</span>
+                    <span class="ops-meta-value">{{ row.scene || "-" }}</span>
+                  </span>
+                </div>
+                <div class="ops-chip-row">
+                  <span class="ops-pill" :class="`ops-pill--${resolveProductStatusType(row.productStatus)}`">
+                    {{ row.productStatus }}
+                  </span>
+                  <span class="ops-pill" :class="`ops-pill--${auditTagType(row.auditStatusCode)}`">
+                    {{ row.auditStatus }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="ops-card-stack">
+                <div class="ops-section-label">提交时间</div>
+                <div class="ops-note">{{ row.createdAt || "-" }}</div>
+              </div>
+            </article>
+          </div>
+          <el-empty v-else description="暂无待展示的审核内容" />
         </el-card>
       </article>
 
@@ -92,7 +113,7 @@
 import { onMounted, ref } from "vue";
 import { ElMessage } from "element-plus";
 import { getAdminContentAudit, getDashboardSummary, getAdminSettlements } from "../api/admin";
-import { formatCompactNumber, formatCurrency, resolveProductStatusType } from "../utils/adminUi";
+import { formatAdminCode, formatCompactNumber, formatCurrency, resolveProductStatusType } from "../utils/adminUi";
 
 const loading = ref(false);
 const summary = ref({
@@ -139,8 +160,18 @@ onMounted(loadData);
   gap: 18px;
 }
 
+.dashboard-audit-card {
+  grid-template-columns: minmax(0, 1.5fr) minmax(160px, 0.55fr);
+}
+
 @media (max-width: 1280px) {
   .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1180px) {
+  .dashboard-audit-card {
     grid-template-columns: 1fr;
   }
 }

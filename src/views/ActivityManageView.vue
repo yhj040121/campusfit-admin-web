@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="manage-page">
     <section class="manage-hero">
       <article class="hero-surface">
@@ -43,43 +43,90 @@
           <div class="table-title">活动列表</div>
           <div class="table-subtitle">时间、热度、发布页可选活动和推荐位都从这里统一维护，适配当前 app 的活动中心展示逻辑。</div>
         </div>
-        <el-space>
+        <div class="toolbar-actions">
+          <el-input
+            v-model="keyword"
+            clearable
+            placeholder="搜索活动 / 场景 / 标签"
+            class="filter-input"
+          />
+          <el-select v-model="statusFilter" class="filter-select">
+            <el-option label="全部活动" value="all" />
+            <el-option label="前台可见" value="active" />
+            <el-option label="未展示" value="inactive" />
+            <el-option label="首页推荐" value="featured" />
+            <el-option label="发布可选" value="publish" />
+          </el-select>
           <el-button type="primary" @click="openCreateDialog">新建活动</el-button>
-        </el-space>
+        </div>
       </div>
 
-      <el-card shadow="never" v-loading="loading" class="manage-card">
-        <el-table :data="activities" stripe>
-          <el-table-column prop="title" label="活动标题" min-width="210" />
-          <el-table-column prop="scene" label="场景" width="120" />
-          <el-table-column prop="period" label="时间文案" width="160" />
-          <el-table-column prop="statusText" label="状态" width="120">
-            <template #default="{ row }">
-              <el-tag :type="resolveActivityStatusType(row)">{{ row.statusText }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="featured" label="推荐" width="100">
-            <template #default="{ row }">
-              <el-tag :type="row.featured ? 'warning' : 'info'">{{ row.featured ? "首页推荐" : "普通" }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="publishSelectable" label="发布可选" width="110">
-            <template #default="{ row }">
-              <el-tag :type="row.publishSelectable ? 'success' : 'info'">{{ row.publishSelectable ? "可选" : "不可选" }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="entries" label="内容数" width="90" />
-          <el-table-column prop="heat" label="热度" width="90" />
-          <el-table-column prop="sortOrder" label="排序" width="90" />
-          <el-table-column prop="startTime" label="开始时间" width="170" />
-          <el-table-column prop="endTime" label="结束时间" width="170" />
-          <el-table-column label="操作" width="240" fixed="right">
-            <template #default="{ row }">
-              <el-space wrap>
-                <el-button size="small" @click="openEditDialog(row)">编辑</el-button>
+      <el-card shadow="never" v-loading="loading" class="manage-card ops-list-panel">
+        <div v-if="filteredActivities.length" class="ops-card-list">
+          <article
+            v-for="row in filteredActivities"
+            :key="row.id"
+            class="ops-card ops-card--split activity-card"
+          >
+            <div class="ops-card-main">
+              <div class="ops-card-code">{{ formatAdminCode("ACT", row.id) }}</div>
+              <div class="ops-card-heading">
+                <div class="ops-card-title">{{ row.title || "未命名活动" }}</div>
+                <span class="ops-pill" :class="`ops-pill--${resolveActivityTone(row)}`">
+                  {{ row.statusText || "状态未知" }}
+                </span>
+              </div>
+              <div class="ops-card-summary">
+                {{ row.summary || row.theme || "统一维护活动文案、推荐位与发布页可选状态。" }}
+              </div>
+              <div class="ops-meta-row">
+                <span class="ops-meta-block">
+                  <span class="ops-meta-label">场景</span>
+                  <span class="ops-meta-value">{{ row.scene || "-" }}</span>
+                </span>
+                <span class="ops-meta-sep" />
+                <span class="ops-meta-block">
+                  <span class="ops-meta-label">时间文案</span>
+                  <span class="ops-meta-value">{{ row.period || "-" }}</span>
+                </span>
+              </div>
+              <div class="ops-chip-row">
+                <span class="ops-pill" :class="row.featured ? 'ops-pill--warning' : 'ops-pill--muted'">
+                  {{ row.featured ? "首页推荐" : "普通位" }}
+                </span>
+                <span class="ops-pill" :class="row.publishSelectable ? 'ops-pill--success' : 'ops-pill--muted'">
+                  {{ row.publishSelectable ? "发布可选" : "发布关闭" }}
+                </span>
+              </div>
+            </div>
+
+            <div class="ops-card-stack">
+              <div class="ops-section-label">活动表现</div>
+              <div class="ops-metric-grid">
+                <div class="ops-metric-card">
+                  <div class="ops-metric-label">内容数</div>
+                  <div class="ops-metric-value ops-metric-value--compact">{{ row.entries || 0 }}</div>
+                </div>
+                <div class="ops-metric-card">
+                  <div class="ops-metric-label">热度</div>
+                  <div class="ops-metric-value ops-metric-value--compact">{{ row.heat || 0 }}</div>
+                </div>
+                <div class="ops-metric-card">
+                  <div class="ops-metric-label">排序</div>
+                  <div class="ops-metric-value ops-metric-value--compact">{{ row.sortOrder || 0 }}</div>
+                </div>
+                <div class="ops-metric-card ops-metric-card--highlight">
+                  <div class="ops-metric-label">时间窗口</div>
+                  <div class="activity-card-window">{{ resolveActivityWindow(row) }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ops-card-side">
+              <div class="ops-card-actions">
+                <el-button @click="openEditDialog(row)">编辑</el-button>
                 <el-button
                   v-if="!row.active"
-                  size="small"
                   type="success"
                   :loading="actionKey === `start-${row.id}`"
                   @click="toggleActivity(row, true)"
@@ -88,17 +135,18 @@
                 </el-button>
                 <el-button
                   v-else
-                  size="small"
                   type="warning"
                   :loading="actionKey === `stop-${row.id}`"
                   @click="toggleActivity(row, false)"
                 >
                   终止
                 </el-button>
-              </el-space>
-            </template>
-          </el-table-column>
-        </el-table>
+              </div>
+              <div class="ops-card-caption">{{ resolveActivityCaption(row) }}</div>
+            </div>
+          </article>
+        </div>
+        <el-empty v-else description="没有符合筛选条件的活动" />
       </el-card>
     </section>
 
@@ -191,7 +239,7 @@ import {
   stopAdminActivity,
   updateAdminActivity
 } from "../api/admin";
-import { normalizeDateTimeValue, resolveActivityStatusType } from "../utils/adminUi";
+import { formatAdminCode, matchesKeyword, normalizeDateTimeValue, resolveActivityStatusType } from "../utils/adminUi";
 
 const loading = ref(false);
 const saving = ref(false);
@@ -201,6 +249,8 @@ const actionKey = ref("");
 const editingId = ref(null);
 const activities = ref([]);
 const formRef = ref(null);
+const keyword = ref("");
+const statusFilter = ref("all");
 
 const form = reactive(defaultForm());
 
@@ -218,6 +268,23 @@ const activeCount = computed(() => activities.value.filter((item) => item.active
 const featuredCount = computed(() => activities.value.filter((item) => item.featured).length);
 const totalEntries = computed(() => activities.value.reduce((sum, item) => sum + Number(item.entries || 0), 0));
 const publishSelectableCount = computed(() => activities.value.filter((item) => item.publishSelectable).length);
+const filteredActivities = computed(() => activities.value.filter((item) => {
+  const matchesText = matchesKeyword(keyword.value, [
+    item.id,
+    item.title,
+    item.badge,
+    item.scene,
+    item.period,
+    item.theme,
+    item.summary
+  ]);
+  const matchesStatus = statusFilter.value === "all"
+    || (statusFilter.value === "active" && item.active)
+    || (statusFilter.value === "inactive" && !item.active)
+    || (statusFilter.value === "featured" && item.featured)
+    || (statusFilter.value === "publish" && item.publishSelectable);
+  return matchesText && matchesStatus;
+}));
 
 function defaultForm() {
   return {
@@ -238,6 +305,34 @@ function defaultForm() {
     startTime: "",
     endTime: ""
   };
+}
+
+function resolveActivityTone(row) {
+  const type = resolveActivityStatusType(row);
+  return type === "info" ? "muted" : type;
+}
+
+function resolveActivityWindow(row) {
+  if (row?.startTime && row?.endTime) {
+    return `${row.startTime} - ${row.endTime}`;
+  }
+  if (row?.startTime) {
+    return `开始于 ${row.startTime}`;
+  }
+  if (row?.endTime) {
+    return `结束于 ${row.endTime}`;
+  }
+  return "未设置具体时间";
+}
+
+function resolveActivityCaption(row) {
+  if (!row?.active) {
+    return "当前不在前台露出，可继续编辑后重新发起。";
+  }
+  if (row?.featured) {
+    return "活动正在首页推荐与活动中心同步露出。";
+  }
+  return "活动正在前台露出，可继续积累内容热度。";
 }
 
 function resetForm() {
@@ -365,3 +460,23 @@ async function toggleActivity(row, enabled) {
 
 onMounted(loadActivities);
 </script>
+
+<style scoped>
+.activity-card {
+  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr) auto;
+}
+
+.activity-card-window {
+  margin-top: 8px;
+  color: var(--admin-text);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+@media (max-width: 1180px) {
+  .activity-card {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

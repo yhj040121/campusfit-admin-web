@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="manage-page">
     <section class="manage-hero">
       <article class="hero-surface">
@@ -42,35 +42,70 @@
           <div class="table-title">公告列表</div>
           <div class="table-subtitle">发布状态会同步影响当前 app 的公告页和首页提示位，时间字段按当前后端格式做了兜底兼容。</div>
         </div>
-        <el-space>
+        <div class="toolbar-actions">
+          <el-input
+            v-model="keyword"
+            clearable
+            placeholder="搜索公告 / 标签 / 摘要"
+            class="filter-input"
+          />
+          <el-select v-model="statusFilter" class="filter-select">
+            <el-option label="全部公告" value="all" />
+            <el-option label="在线公告" value="online" />
+            <el-option label="未上线" value="offline" />
+            <el-option label="置顶优先" value="pinned" />
+          </el-select>
           <el-button type="primary" @click="openCreateDialog">发布公告</el-button>
-        </el-space>
+        </div>
       </div>
 
-      <el-card shadow="never" v-loading="loading" class="manage-card">
-        <el-table :data="announcements" stripe>
-          <el-table-column prop="title" label="公告标题" min-width="220" />
-          <el-table-column prop="badge" label="标签" width="120">
-            <template #default="{ row }">
-              <el-tag :type="row.pinned ? 'warning' : 'info'">{{ row.badge }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="summary" label="摘要" min-width="280" show-overflow-tooltip />
-          <el-table-column prop="publishTime" label="发布时间" width="170" />
-          <el-table-column prop="expireTime" label="结束时间" width="170" />
-          <el-table-column prop="sortOrder" label="排序" width="90" />
-          <el-table-column prop="statusText" label="状态" width="110">
-            <template #default="{ row }">
-              <el-tag :type="row.statusCode === 1 ? 'success' : 'info'">{{ row.statusText }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="220" fixed="right">
-            <template #default="{ row }">
-              <el-space wrap>
-                <el-button size="small" @click="openEditDialog(row)">编辑</el-button>
+      <el-card shadow="never" v-loading="loading" class="manage-card ops-list-panel">
+        <div v-if="filteredAnnouncements.length" class="ops-card-list">
+          <article
+            v-for="row in filteredAnnouncements"
+            :key="row.id"
+            class="ops-card ops-card--split announcement-card"
+          >
+            <div class="ops-card-main">
+              <div class="ops-card-code">{{ formatAdminCode("ANN", row.id) }}</div>
+              <div class="ops-card-heading">
+                <div class="ops-card-title">{{ row.title || "未命名公告" }}</div>
+                <span class="ops-pill" :class="row.statusCode === 1 ? 'ops-pill--success' : 'ops-pill--muted'">
+                  {{ row.statusText || "未上线" }}
+                </span>
+              </div>
+              <div class="ops-card-summary">{{ row.summary || "公告摘要缺失，请补充说明。" }}</div>
+              <div class="ops-chip-row">
+                <span class="ops-pill" :class="row.pinned ? 'ops-pill--warning' : 'ops-pill--info'">
+                  {{ row.badge || "官方公告" }}
+                </span>
+                <span class="ops-pill" :class="row.pinned ? 'ops-pill--warning' : 'ops-pill--muted'">
+                  {{ row.pinned ? "置顶优先" : "普通优先级" }}
+                </span>
+              </div>
+            </div>
+
+            <div class="ops-card-stack">
+              <div class="ops-section-label">时间与优先级</div>
+              <div class="ops-metric-grid">
+                <div class="ops-metric-card">
+                  <div class="ops-metric-label">排序</div>
+                  <div class="ops-metric-value ops-metric-value--compact">{{ row.sortOrder || 0 }}</div>
+                </div>
+                <div class="ops-metric-card ops-metric-card--highlight">
+                  <div class="ops-metric-label">摘要长度</div>
+                  <div class="ops-metric-value ops-metric-value--compact">{{ (row.summary || "").length }}</div>
+                </div>
+              </div>
+              <div class="ops-note">发布时间：{{ row.publishTime || "立即生效" }}</div>
+              <div class="ops-note">结束时间：{{ row.expireTime || "长期有效" }}</div>
+            </div>
+
+            <div class="ops-card-side">
+              <div class="ops-card-actions">
+                <el-button @click="openEditDialog(row)">编辑</el-button>
                 <el-button
                   v-if="row.statusCode !== 1"
-                  size="small"
                   type="success"
                   :loading="actionKey === `enable-${row.id}`"
                   @click="toggleAnnouncement(row, true)"
@@ -79,17 +114,18 @@
                 </el-button>
                 <el-button
                   v-else
-                  size="small"
                   type="warning"
                   :loading="actionKey === `disable-${row.id}`"
                   @click="toggleAnnouncement(row, false)"
                 >
                   下线
                 </el-button>
-              </el-space>
-            </template>
-          </el-table-column>
-        </el-table>
+              </div>
+              <div class="ops-card-caption">{{ resolveAnnouncementCaption(row) }}</div>
+            </div>
+          </article>
+        </div>
+        <el-empty v-else description="没有符合筛选条件的公告" />
       </el-card>
     </section>
 
@@ -161,7 +197,7 @@ import {
   getAdminAnnouncements,
   updateAdminAnnouncement
 } from "../api/admin";
-import { normalizeDateTimeValue } from "../utils/adminUi";
+import { formatAdminCode, matchesKeyword, normalizeDateTimeValue } from "../utils/adminUi";
 
 const loading = ref(false);
 const saving = ref(false);
@@ -171,6 +207,8 @@ const actionKey = ref("");
 const editingId = ref(null);
 const announcements = ref([]);
 const formRef = ref(null);
+const keyword = ref("");
+const statusFilter = ref("all");
 
 const form = reactive(defaultForm());
 
@@ -181,6 +219,20 @@ const rules = {
 
 const activeCount = computed(() => announcements.value.filter((item) => item.statusCode === 1).length);
 const pinnedCount = computed(() => announcements.value.filter((item) => item.pinned).length);
+const filteredAnnouncements = computed(() => announcements.value.filter((item) => {
+  const matchesText = matchesKeyword(keyword.value, [
+    item.id,
+    item.title,
+    item.badge,
+    item.summary,
+    item.content
+  ]);
+  const matchesStatus = statusFilter.value === "all"
+    || (statusFilter.value === "online" && item.statusCode === 1)
+    || (statusFilter.value === "offline" && item.statusCode !== 1)
+    || (statusFilter.value === "pinned" && item.pinned);
+  return matchesText && matchesStatus;
+}));
 
 function defaultForm() {
   return {
@@ -194,6 +246,16 @@ function defaultForm() {
     pinnedFlag: false,
     sortOrder: 0
   };
+}
+
+function resolveAnnouncementCaption(row) {
+  if (row?.statusCode !== 1) {
+    return "当前未在前台展示，可继续补充内容后上线。";
+  }
+  if (row?.pinned) {
+    return "公告已上线且置顶，会优先展示在公告入口前列。";
+  }
+  return "公告已上线，会按照当前排序参与前台展示。";
 }
 
 function resetForm() {
@@ -307,3 +369,15 @@ async function toggleAnnouncement(row, enabled) {
 
 onMounted(loadAnnouncements);
 </script>
+
+<style scoped>
+.announcement-card {
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.95fr) auto;
+}
+
+@media (max-width: 1180px) {
+  .announcement-card {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

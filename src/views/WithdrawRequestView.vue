@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="manage-page">
     <section class="manage-hero">
       <article class="hero-surface">
@@ -43,30 +43,62 @@
           <div class="table-subtitle">审核通过后会更新为已打款，驳回后也会同步给创作者消息入口。</div>
         </div>
         <div class="toolbar-actions">
+          <el-input
+            v-model="keyword"
+            clearable
+            placeholder="搜索创作者 / 备注 / 申请 ID"
+            class="filter-input"
+          />
+          <el-select v-model="statusFilter" class="filter-select">
+            <el-option label="全部状态" value="all" />
+            <el-option label="审核中" value="pending" />
+            <el-option label="已打款" value="paid" />
+            <el-option label="已驳回" value="rejected" />
+          </el-select>
           <el-button plain @click="goSettlements">查看结算记录</el-button>
         </div>
       </div>
 
-      <el-card shadow="never" v-loading="loading" class="manage-card">
-        <el-table :data="requests" stripe>
-          <el-table-column prop="requestId" label="申请 ID" width="100" />
-          <el-table-column prop="creator" label="创作者" width="120" />
-          <el-table-column prop="amount" label="提现金额" width="120">
-            <template #default="{ row }">{{ formatCurrency(row.amount) }}</template>
-          </el-table-column>
-          <el-table-column prop="status" label="审核状态" width="120">
-            <template #default="{ row }">
-              <el-tag :type="statusType(row.statusCode)">{{ row.status }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="createdAt" label="申请时间" width="170" />
-          <el-table-column prop="processedAt" label="处理时间" width="170" />
-          <el-table-column prop="remark" label="处理备注" min-width="220" show-overflow-tooltip />
-          <el-table-column label="操作" width="210" fixed="right">
-            <template #default="{ row }">
-              <div v-if="row.statusCode === 0" class="action-group">
+      <el-card shadow="never" v-loading="loading" class="manage-card ops-list-panel">
+        <div v-if="filteredRequests.length" class="ops-card-list">
+          <article
+            v-for="row in filteredRequests"
+            :key="row.requestId"
+            class="ops-card ops-card--split withdraw-card"
+          >
+            <div class="ops-card-main">
+              <div class="ops-card-code">{{ formatAdminCode("WDR", row.requestId) }}</div>
+              <div class="ops-card-heading">
+                <div class="ops-card-title">{{ row.creator || "未知创作者" }}</div>
+                <span class="ops-pill" :class="`ops-pill--${statusTone(row.statusCode)}`">
+                  {{ row.status || "审核中" }}
+                </span>
+              </div>
+              <div class="ops-card-summary">{{ row.remark || "等待财务确认并回写创作者消息通知。" }}</div>
+              <div class="ops-meta-row">
+                <span class="ops-meta-block">
+                  <span class="ops-meta-label">申请时间</span>
+                  <span class="ops-meta-value">{{ row.createdAt || "-" }}</span>
+                </span>
+                <span class="ops-meta-sep" />
+                <span class="ops-meta-block">
+                  <span class="ops-meta-label">处理时间</span>
+                  <span class="ops-meta-value">{{ row.processedAt || "-" }}</span>
+                </span>
+              </div>
+            </div>
+
+            <div class="ops-card-stack">
+              <div class="ops-section-label">提现金额</div>
+              <div class="ops-amount">{{ formatCurrency(row.amount) }}</div>
+              <div class="ops-note">
+                {{ row.statusCode === 0 ? "待财务确认打款" : (row.statusCode === 1 ? "已完成打款回写" : "已驳回并同步通知创作者") }}
+              </div>
+            </div>
+
+            <div class="ops-card-side">
+              <div v-if="row.statusCode === 0" class="ops-card-actions">
                 <el-button
-                  size="small"
                   type="primary"
                   :loading="actionKey === `approve-${row.requestId}`"
                   @click="handleApprove(row)"
@@ -74,7 +106,6 @@
                   通过打款
                 </el-button>
                 <el-button
-                  size="small"
                   type="danger"
                   plain
                   :loading="actionKey === `reject-${row.requestId}`"
@@ -83,11 +114,21 @@
                   驳回
                 </el-button>
               </div>
-              <el-tag v-else-if="row.statusCode === 1" type="success">已打款</el-tag>
-              <el-tag v-else type="danger">已驳回</el-tag>
-            </template>
-          </el-table-column>
-        </el-table>
+              <div v-else class="ops-card-actions">
+                <span
+                  class="ops-pill"
+                  :class="row.statusCode === 1 ? 'ops-pill--success' : 'ops-pill--danger'"
+                >
+                  {{ row.statusCode === 1 ? "已打款" : "已驳回" }}
+                </span>
+              </div>
+              <div class="ops-card-caption">
+                {{ row.statusCode === 0 ? "确认后会同步更新提现入口状态。" : "处理结果已经回写到创作者端。" }}
+              </div>
+            </div>
+          </article>
+        </div>
+        <el-empty v-else description="没有符合筛选条件的提现申请" />
       </el-card>
     </section>
   </div>
@@ -102,18 +143,41 @@ import {
   getAdminWithdrawRequests,
   rejectAdminWithdrawRequest
 } from "../api/admin";
-import { formatCurrency, toNumber } from "../utils/adminUi";
+import { formatAdminCode, formatCurrency, matchesKeyword, toNumber } from "../utils/adminUi";
 
 const router = useRouter();
 const loading = ref(false);
 const requests = ref([]);
 const actionKey = ref("");
+const keyword = ref("");
+const statusFilter = ref("all");
 
 const pendingCount = computed(() => requests.value.filter((item) => item.statusCode === 0).length);
 const processedCount = computed(() => requests.value.filter((item) => item.statusCode !== 0).length);
 const pendingAmount = computed(() => formatCurrency(requests.value
   .filter((item) => item.statusCode === 0)
   .reduce((sum, item) => sum + toNumber(item.amount), 0)));
+const filteredRequests = computed(() => requests.value.filter((item) => {
+  const matchesText = matchesKeyword(keyword.value, [
+    item.requestId,
+    item.creator,
+    item.status,
+    item.remark,
+    item.createdAt,
+    item.processedAt
+  ]);
+  const matchesStatus = statusFilter.value === "all"
+    || (statusFilter.value === "pending" && item.statusCode === 0)
+    || (statusFilter.value === "paid" && item.statusCode === 1)
+    || (statusFilter.value === "rejected" && item.statusCode === 2);
+  return matchesText && matchesStatus;
+}));
+
+function statusTone(statusCode) {
+  if (statusCode === 1) return "success";
+  if (statusCode === 2) return "danger";
+  return "warning";
+}
 
 async function loadRequests() {
   loading.value = true;
@@ -124,12 +188,6 @@ async function loadRequests() {
   } finally {
     loading.value = false;
   }
-}
-
-function statusType(statusCode) {
-  if (statusCode === 1) return "success";
-  if (statusCode === 2) return "danger";
-  return "warning";
 }
 
 function goSettlements() {
@@ -178,3 +236,15 @@ async function handleReject(row) {
 
 onMounted(loadRequests);
 </script>
+
+<style scoped>
+.withdraw-card {
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr) auto;
+}
+
+@media (max-width: 1180px) {
+  .withdraw-card {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
